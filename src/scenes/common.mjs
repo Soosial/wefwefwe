@@ -125,7 +125,7 @@ export function skyLights(f, s, t, st = {}) {
   if (st.astra) { const [x, y] = SKY.astra; astraStar(s, t, x, y + bobY(2), 3, { k: st.astra }); f.light(x, y, 40, '#cfe6ff', 0.5 * st.astra); }
   if (st.sol) { const [x, y] = SKY.sol; sun(s, t, x, y + bobY(3), 5, { k: st.sol }); f.light(x, y, 50, '#ffcf6a', 0.6 * st.sol); }
   if (st.luna) { const [x, y] = SKY.luna; luna(s, t, x, y + bobY(4), 5, { k: st.luna }); }
-  const riv = [['deep', '#4d6bfe'], ['kimi', '#3a4060'], ['z', '#2346d6']];
+  const riv = [['deep', '#4d6bfe'], ['kimi', '#3a4060']];
   riv.forEach(([k, c], i) => {
     if (!st[k]) return;
     const [x, y] = SKY[k];

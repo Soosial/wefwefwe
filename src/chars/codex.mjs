@@ -20,6 +20,15 @@ const FACES = {
   eyes: (g, X, Y) => { fillRect(g, X + 8, Y + 3, 3, 8, 'e'); fillRect(g, X + 21, Y + 3, 3, 8, 'e'); set(g, X + 8, Y + 3, 'E'); set(g, X + 21, Y + 3, 'E'); },
   wink: (g, X, Y) => { caret(g, X + 5, Y + 5); fillRect(g, X + 20, Y + 7, 7, 2, 'e'); fillRect(g, X + 13, Y + 12, 6, 1, 'e'); },
   smug: (g, X, Y) => { fillRect(g, X + 5, Y + 6, 7, 2, 'e'); fillRect(g, X + 20, Y + 6, 7, 2, 'e'); fillRect(g, X + 7, Y + 8, 4, 2, 'e'); fillRect(g, X + 22, Y + 8, 4, 2, 'e'); fillRect(g, X + 14, Y + 12, 5, 1, 'e'); set(g, X + 19, Y + 11, 'e'); },
+  worried: (g, X, Y) => { fillRect(g, X + 8, Y + 5, 3, 6, 'e'); fillRect(g, X + 21, Y + 5, 3, 6, 'e'); for (let i = 0; i < 5; i++) { set(g, X + 5 + i, Y + 4 - (i >> 1), 'e'); set(g, X + 26 - i, Y + 4 - (i >> 1), 'e'); } for (let i = 0; i < 6; i++) set(g, X + 13 + i, Y + 13 - (i % 2), 'e'); },
+  laugh: (g, X, Y) => { caret(g, X + 5, Y + 3); caret(g, X + 19, Y + 3); fillRect(g, X + 12, Y + 9, 8, 5, 'e'); fillRect(g, X + 13, Y + 10, 6, 2, 'k'); },
+  surprised: (g, X, Y) => { ringE(g, X + 6, Y + 2); ringE(g, X + 19, Y + 2); fillRect(g, X + 14, Y + 11, 4, 4, 'e'); fillRect(g, X + 15, Y + 12, 2, 2, 'k'); },
+  dots: (g, X, Y) => { for (const dx of [9, 15, 21]) fillRect(g, X + dx, Y + 8, 2, 2, 'e'); },
+  question: (g, X, Y) => { gridText(g, '?', X + 12, Y + 4, 'e', 'press'); },
+  excl: (g, X, Y) => { gridText(g, '!', X + 12, Y + 4, 'e', 'press'); },
+  sleep: (g, X, Y) => { fillRect(g, X + 5, Y + 8, 7, 1, 'e'); fillRect(g, X + 20, Y + 8, 7, 1, 'e'); gridText(g, 'z', X + 25, Y + 2, 'e'); },
+  determined: (g, X, Y) => { fillRect(g, X + 6, Y + 6, 6, 4, 'e'); fillRect(g, X + 20, Y + 6, 6, 4, 'e'); for (let i = 0; i < 6; i++) { set(g, X + 5 + i, Y + 2 + (i >> 1), 'e'); set(g, X + 26 - i, Y + 2 + (i >> 1), 'e'); } fillRect(g, X + 13, Y + 12, 6, 1, 'e'); },
+  teary: (g, X, Y) => { fillRect(g, X + 5, Y + 4, 7, 2, 'e'); fillRect(g, X + 8, Y + 6, 2, 4, 'e'); fillRect(g, X + 20, Y + 4, 7, 2, 'e'); fillRect(g, X + 23, Y + 6, 2, 4, 'e'); fillRect(g, X + 8, Y + 11, 1, 3, 'E'); fillRect(g, X + 23, Y + 11, 1, 3, 'E'); for (let i = 0; i < 6; i++) set(g, X + 13 + i, Y + 13 - (i % 2), 'e'); },
 };
 function caret(g, x, y) { // ^ 8 wide, 2px strokes
   fillRect(g, x + 3, y, 2, 1, 'e'); fillRect(g, x + 2, y + 1, 4, 1, 'e');
@@ -66,12 +75,12 @@ function grid(p) {
   } else if (scr.mode === 'text' || scr.mode === 'red') {
     const lines = scr.lines || [];
     const ch = scr.color || (scr.mode === 'red' ? 'r' : 'e');
-    const lh = 7;
+    const fnt = scr.font || 'tiny', lh = fnt === 'press' ? 9 : 7;
     const top = sy + Math.round((16 - lines.length * lh + 2) / 2);
     lines.forEach((ln, i) => {
-      const w = gridTextWidth(ln);
+      const w = gridTextWidth(ln, fnt);
       const x0 = scr.left ? sx + 3 : sx + Math.round((32 - w) / 2);
-      const wEnd = gridText(g, ln, x0, top + i * lh, ch);
+      const wEnd = gridText(g, ln, x0, top + i * lh, ch, fnt);
       if (scr.cursor && i === lines.length - 1) fillRect(g, x0 + wEnd + 1, top + i * lh + 4, 3, 1, ch);
     });
   }
@@ -85,7 +94,7 @@ function grid(p) {
   // clear hand area of body pixels so the hand outline reads on top
   const hands = [[X(11) + hL[0], Y(37) + hL[1]], [X(39) + hR[0], Y(37) + hR[1]]];
   for (const [x, y] of hands) hand(x, y);
-  outline(g);
+  if (!p.noOutline) outline(g);
   // seam outline where hands overlap the body
   for (const [x, y] of hands) {
     for (let i = -1; i <= 6; i++) for (const [qx, qy] of [[x + i, y - 1], [x + i, y + 6], [x - 1, y + i], [x + 6, y + i]]) {
@@ -96,7 +105,7 @@ function grid(p) {
 }
 
 const base = makeChar('codex', grid, (p) => palette(CODEX_PAL, { sat: p.sat, bright: p.bright, tint: p.tint }),
-  ['sq', 'bob', 'tb', 'feet', 'feetDx', 'handL', 'handR', 'screen'], ['sat', 'bright', 'tint'], ['e', 'E', 'r', 'G', 'y']);
+  ['sq', 'bob', 'tb', 'feet', 'feetDx', 'handL', 'handR', 'screen'], ['sat', 'bright', 'tint'], ['e', 'E', 'r', 'G', 'y'], { h: 'o', s: 'o', S: 'o' });
 
 export function codexWalk(ph) {
   const f = ((Math.floor(ph * 4) % 4) + 4) % 4;

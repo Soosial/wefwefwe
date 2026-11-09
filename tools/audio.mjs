@@ -1,4 +1,4 @@
-// Music score + mixdown: builds out/audio.wav (stereo 16-bit, 44.1 kHz) from music cues and scene SFX.
+// Mixdown: builds out/audio.wav (stereo 16-bit, 44.1 kHz) from every scene's MUSIC cues and SFX.
 import { writeFileSync } from 'node:fs';
 import { SR, Bus, INST, reverb } from '../src/audio/synth.mjs';
 import { SFX } from '../src/audio/sfx.mjs';
@@ -84,47 +84,12 @@ function cue(bus, c) {
   }
 }
 
-const THEME = "5 . 3 5 1' . 7 6 5 . 3 . 2 3 1 . 6 . 4 6 1' . 2' 1' 7 . 5 . 2' - - -";
-const THEME3 = "5 . 3 5 1' . 7 6 5 . 3 . 2 3 1 . 6 . 4 6 1' . 2' 1' 1' - - - - - - -";
-const FEST = "1 . 3 5 6 5 3 . 2 . 4 6 5 4 2 . 4 . 6 1' 7 6 4 . 5 . 7 2' 1' . . . 3' . 2' 1' 6 . 5 . 4 . 6 5 4 . 2 . 1 . 3 4 5 . 6 . 5 . . . 1' . . .";
-const TAUNT = "5 . 3 . 6 5 3 . 5 . 3 . 6 5 3 . 6 . 4 . 1' 6 4 . 5 . 7 . 2' . . .";
-const SNEAK = '1 . . 3 . 4 . #4 5 . . . . . . . 1 . . 3 . 4 . #4 5 . 4 . 3 . 2 .';
-const sneak = (t0, dur, fi, fo) => ({ t0, dur, bpm: 100, root: 52, scale: 'minor', bars: [1, 1, 4, 5], fi, fo, mel: { inst: 'pluck', str: SNEAK, step: 0.5, oct: 1, vel: 0.75, delay: 1, loop: true }, bass: { pattern: 'walk', inst: 'pluck', oct: -1, vel: 0.85 }, drums: { c: '....x.......x...', vel: 0.32 } });
-const fest = (t0, dur, fo) => ({ t0, dur, bpm: 124, root: 65, bars: [1, 6, 4, 5], fi: 0.3, fo, mel: { inst: 'lead', str: FEST, step: 0.5, vel: 0.42, delay: 1, loop: true }, bass: { pattern: 'pulse8', oct: -2, vel: 0.45 }, arp: { inst: 'pluck', rate: 0.25, vel: 0.14 }, drums: { k: 'x...x...x...x...', s: '....x.......x...', h: '..x...x...x...x.', vel: 0.42 } });
-
-export const CUES = [
-  { t0: 0.5, dur: 13.0, bpm: 72, root: 60, bars: [1, 6, 4, 5], fi: 1.5, fo: 1.2, mel: { inst: 'bell', str: THEME, oct: 1, vel: 0.5 }, pad: { oct: -1, vel: 0.5 }, arp: { inst: 'pluck', rate: 0.5, vel: 0.2, from: 6.6 } },
-  { t0: 13.0, dur: 5.0, bpm: 120, root: 60, bars: [1, 4, 1], fi: 0.05, fo: 0.8, mel: { inst: 'bell', str: "5 1' 3' 5' 3' - - - 4' 3' 2' 7 1' - - -", oct: 1, vel: 0.5 }, pad: { oct: -1, vel: 0.45 }, drums: { k: 'x...............', cr: 'x...............', vel: 0.35 } },
-  fest(18.6, 13.6, 0.4),
-  { t0: 32.2, dur: 4.7, bpm: 124, root: 65, bars: [4, 5, 1], fi: 0.2, fo: 0.15, bass: { pattern: 'whole', oct: -2, vel: 0.35 }, arp: { inst: 'pluck', rate: 0.5, vel: 0.1 }, pad: { oct: -1, vel: 0.2 } },
-  { t0: 38.4, dur: 12.0, bpm: 96, bpb: 3, root: 57, scale: 'minor', bars: [1, 6, 3, '5M'], fi: 0.5, fo: 0.8, mel: { inst: 'box', str: '1\' . 7 . 6 5 6 . 5 . 4 3 3 . 2 . 3 5 #7 . . . 5 .', oct: 1, vel: 0.45, loop: true }, bass: { pattern: 'waltz', inst: 'pluck', oct: -1, vel: 0.3 }, drums: { w: 'x...x...x...', vel: 0.12 } },
-  { t0: 52.3, dur: 12.6, bpm: 132, root: 60, bars: [1, 1, 4, 5], fi: 0.2, fo: 1.5, mel: { inst: 'lead', str: TAUNT, vel: 0.42, delay: 1, loop: true, opts: { duty: 0.5, rel: 0.03 } }, bass: { pattern: 'oom', oct: -2, vel: 0.5 }, drums: { k: 'x.......x.......', s: '....x.......x...', w: '..x...x...x...x.', vel: 0.38 } },
-  { t0: 67.4, dur: 12.8, bpm: 60, root: 57, scale: 'minor', bars: [1, 6, 3, 7], fi: 1.0, fo: 1.2, mel: { inst: 'piano', str: '3 . . 2 1 . . . 1 . . 7, 6, . . . 5, . 6, 7, 1 . 2 . 3 - - - . . . . 3 . . 2 1 . . .', oct: 1, vel: 0.42 }, pad: { inst: 'strings', oct: -1, vel: 0.32 } },
-  { t0: 73.4, dur: 6.0, bpm: 72, root: 60, bars: [6, 4], fi: 0.8, fo: 1.2, mel: { inst: 'bell', str: "5 . 3 5 1' . 7 6 5 . 3 . 2 3 1 .", oct: 1, vel: 0.3 } },
-  sneak(80.5, 8.5, 0.3, 0.05),
-  sneak(90.9, 2.1, 0.1, 0.6),
-  { t0: 93.0, dur: 3.2, bpm: 60, root: 57, scale: 'minor', bars: [1], fi: 0.5, fo: 1.0, pad: { inst: 'strings', oct: -1, vel: 0.3 } },
-  { t0: 95.5, dur: 9.7, bpm: 76, root: 65, bars: [1, 5, 6, 4], fi: 1.5, fo: 0.3, mel: { inst: 'bell', str: THEME, vel: 0.4, delay: 1 }, pad: { oct: -1, vel: 0.45 }, bass: { pattern: 'whole', oct: -2, vel: 0.3 } },
-  { t0: 105.2, dur: 6.8, bpm: 76, root: 65, bars: [4, 5, 1, 1], fi: 0.3, fo: 1.0, mel: { inst: 'lead', str: "1' . 7 1' 2' . 1' 7 2' . 1' 2' 3' . 2' 1' 1' - - - 5 - - - 1' - - - . . . .", vel: 0.42, opts: { duty: 0.5, cut: 2400 } }, pad: { inst: 'strings', oct: -1, vel: 0.5 }, arp: { inst: 'pluck', rate: 0.25, vel: 0.14 }, bass: { pattern: 'roots4', oct: -2, vel: 0.35 }, drums: { k: 'x.......x.......', h: '..x...x...x...x.', vel: 0.25 } },
-  { t0: 112.3, dur: 6.0, bpm: 120, root: 55, bars: [1, 4, 5, 1], fi: 0.3, fo: 0.4, mel: { inst: 'lead', str: '1 . 2 3 5 . 3 . 4 . 3 2 1 . . . 5 . 6 5 3 . 2 . 1 . 2 3 1 . . .', oct: 1, vel: 0.35, loop: true }, bass: { pattern: 'pulse8', oct: -1, vel: 0.4 }, arp: { inst: 'pluck', rate: 0.25, oct: 1, vel: 0.12 }, drums: { k: 'x.......x.......', w: 'x...x...x...x...', h: '..x...x...x...x.', vel: 0.35 } },
-  { t0: 118.6, dur: 1.6, bpm: 120, root: 55, bars: [[0, 5, 7]], fi: 1.0, fo: 0.05, pad: { inst: 'strings', oct: 0, vel: 0.4 }, drums: { t: 'x.x.x.x.xxxxxxxx', vel: 0.3 } },
-  { t0: 120.2, dur: 7.3, bpm: 100, root: 55, bars: [1, 6, 4, 5], fi: 0.05, fo: 0.3, mel: { inst: 'lead', str: THEME, oct: 1, vel: 0.42, delay: 1, opts: { duty: 0.5, cut: 3000 } }, mel2: { inst: 'bell', str: THEME, oct: 1, vel: 0.22, delay: 1 }, pad: { inst: 'strings', oct: -1, vel: 0.45 }, bass: { pattern: 'roots4', oct: -2, vel: 0.42 }, drums: { k: 'x.......x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', cr: 'x...............', vel: 0.4 } },
-  { t0: 127.5, dur: 2.7, bpm: 100, root: 57, bars: [4, 1], fi: 0.05, fo: 0.8, mel: { inst: 'lead', str: "6 . 4 6 1' . 2' 1' 1' - - - - - - -", oct: 1, vel: 0.48, opts: { duty: 0.5 } }, mel2: { inst: 'bell', str: "6 . 4 6 1' . 2' 1' 1' - - - - - - -", oct: 1, vel: 0.25 }, pad: { inst: 'strings', oct: -1, vel: 0.5 }, bass: { pattern: 'whole', oct: -2, vel: 0.4 }, drums: { k: 'x...............', cr: 'x...............', vel: 0.5 } },
-  { t0: 130.4, dur: 6.0, bpm: 112, root: 55, bars: [1, 5, 6, 4], fi: 0.6, fo: 0.5, mel: { inst: 'lead', str: "3 . 5 . 1' . 7 . 6 . 5 . 3 . 2 . 3 . 5 . 6 . 5 . 1' - - - . . . .", oct: 1, vel: 0.4, opts: { duty: 0.5 } }, mel2: { inst: 'bell', str: "3 . 5 . 1' . 7 . 6 . 5 . 3 . 2 . 3 . 5 . 6 . 5 . 1' - - - . . . .", oct: 1, vel: 0.18 }, arp: { inst: 'pluck', rate: 0.25, vel: 0.12 }, bass: { pattern: 'pulse8', oct: -2, vel: 0.4 }, drums: { k: 'x.......x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', vel: 0.3 } },
-  { t0: 137.0, dur: 2.4, bpm: 132, root: 60, bars: [1, 1], fi: 0.1, fo: 0.2, mel: { inst: 'lead', str: TAUNT, vel: 0.38, opts: { duty: 0.5, rel: 0.03 } }, bass: { pattern: 'oom', oct: -2, vel: 0.45 }, drums: { k: 'x.......x.......', w: '..x...x...x...x.', vel: 0.3 } },
-  { t0: 140.4, dur: 2.6, bpm: 120, root: 55, bars: [1, 4], fi: 0.05, fo: 0.5, mel: { inst: 'brass', str: "1 . 3 . 5 . 1' - 5 . 1' - - - - -", oct: 1, vel: 0.5 }, pad: { inst: 'strings', oct: -1, vel: 0.45 }, drums: { k: 'x...x...x...x...', s: '....x.......x...', cr: 'x...............', vel: 0.45 } },
-  sneak(143.3, 5.9, 0.3, 0.4),
-  { t0: 149.2, dur: 2.7, bpm: 70, root: 40, scale: 'minor', bars: [1], fi: 0.3, fo: 0.05, pad: { inst: 'strings', oct: 1, vel: 0.5 }, drums: { k: 'x..x............', vel: 0.55 } },
-  { t0: 151.9, dur: 2.4, bpm: 140, root: 40, scale: 'minor', bars: [1, 6], fi: 0.02, fo: 0.1, pad: { inst: 'brass', oct: 1, vel: 0.32 }, drums: { k: 'x...x...x...x...', t: 'x.x.x.x.x.x.x.x.', vel: 0.42 } },
-  { t0: 156.7, dur: 2.6, bpm: 168, root: 60, bars: [1, 5, 1, 5], fi: 0.05, fo: 0.3, mel: { inst: 'lead', str: "1 2 3 4 5 4 3 2 1 2 3 4 5 6 7 1' 5 . 3 . 1 . . .", oct: 1, vel: 0.4, opts: { duty: 0.5, rel: 0.02 } }, bass: { pattern: 'pulse8', oct: -2, vel: 0.4 }, drums: { k: 'x...x...x...x...', s: '....x.......x...', h: 'xxxxxxxxxxxxxxxx', vel: 0.35 } },
-  { t0: 161.2, dur: 0.9, bpm: 120, root: 60, bars: [1], mel: { inst: 'bell', str: "5 1'", oct: 1, vel: 0.4 } },
-  { t0: 162.4, dur: 10.4, bpm: 90, root: 60, bars: [1, 6, 4, 1], fi: 1.0, fo: 2.0, mel: { inst: 'bell', str: THEME3, oct: 1, vel: 0.45 }, mel2: { inst: 'lead', str: THEME3, oct: 0, vel: 0.22, opts: { duty: 0.5, cut: 1800 } }, pad: { inst: 'strings', oct: -1, vel: 0.45 }, arp: { inst: 'pluck', rate: 0.5, vel: 0.14 }, bass: { pattern: 'whole', oct: -2, vel: 0.3 } },
-  fest(173.3, 5.2, 0.05),
-];
 
 export function buildAudio() {
   const music = new Bus(TOTAL + 1), fx = new Bus(TOTAL + 1);
-  for (const c of CUES) cue(music, c);
+  // each scene carries its own score in scene-local time
+  let at = 0;
+  for (const sc of SCENES) { for (const c of sc.music) cue(music, { ...c, t0: at + c.t0 }); at += sc.dur; }
   let acc = 0;
   let count = 0;
   for (const sc of SCENES) {
@@ -174,5 +139,5 @@ if (process.argv[1] && process.argv[1].endsWith('audio.mjs')) {
   const { buf, peak, count, n } = buildAudio();
   const out = process.argv[2] || 'out/audio.wav';
   writeFileSync(out, buf);
-  console.log('wrote', out, 'samples', n, 'sfx', count, 'cues', CUES.length, 'peak(pre-norm)', peak.toFixed(3), 'ms', Date.now() - t0);
+  console.log('wrote', out, 'samples', n, 'sfx', count, 'cues', SCENES.reduce((a, s) => a + s.music.length, 0), 'peak(pre-norm)', peak.toFixed(3), 'ms', Date.now() - t0);
 }

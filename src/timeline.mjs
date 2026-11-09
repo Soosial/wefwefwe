@@ -1,49 +1,36 @@
-// Scene order and durations (sum = 180 s). Scene modules export default {render, in?, out?, xfade?} and SFX.
-import * as prologue from './scenes/s01_prologue.mjs';
-import * as title from './scenes/s02_title.mjs';
-import * as festival from './scenes/s03_festival.mjs';
-import * as months from './scenes/s04_months.mjs';
-import * as mockery from './scenes/s05_mockery.mjs';
-import * as rain from './scenes/s06_rain.mjs';
-import * as spy from './scenes/s07_spy.mjs';
-import * as friends from './scenes/s08_friends.mjs';
-import * as comeback from './scenes/s09_comeback.mjs';
-import * as together from './scenes/s10_together.mjs';
-import * as ambush from './scenes/s11_ambush.mjs';
-import * as finale from './scenes/s12_finale.mjs';
-import * as credits from './scenes/s13_credits.mjs';
-import { text } from './core/font.mjs';
-
-function placeholder(id) {
-  return {
-    default: {
-      render(f, t) {
-        const s = f.camera(240, 135, 1);
-        s.d.fill(0xff201830);
-        text(f.ui, id + '  ' + t.toFixed(1), 240, 130, { align: 'center', color: '#ffffff' });
-      },
-    },
-    SFX: [],
-  };
-}
+// Scene order and durations (sum = 240 s). Scene modules export default {render, in?, out?}, SFX and MUSIC (scene-local times).
+import * as opening from './scenes/v2_01_opening.mjs';
+import * as intro from './scenes/v2_02_intro.mjs';
+import * as race from './scenes/v2_03_race.mjs';
+import * as falling from './scenes/v2_04_falling.mjs';
+import * as overtaken from './scenes/v2_05_overtaken.mjs';
+import * as rain from './scenes/v2_06_rain.mjs';
+import * as friend from './scenes/v2_07_friend.mjs';
+import * as build from './scenes/v2_08_build.mjs';
+import * as argon from './scenes/v2_09_argon.mjs';
+import * as together from './scenes/v2_10_together.mjs';
+import * as stand from './scenes/v2_11_stand.mjs';
+import * as ambush from './scenes/v2_12_ambush.mjs';
+import * as finale from './scenes/v2_13_finale.mjs';
+import * as credits from './scenes/v2_14_credits.mjs';
+import * as carbon from './scenes/v2_15_carbon.mjs';
 
 const ORDER = [
-  ['prologue', 13, prologue],
-  ['title', 5, title],
-  ['festival', 20, festival],
-  ['geminiTurn', 14, months],
-  ['mockery', 15, mockery],
-  ['rain', 13, rain],
-  ['spy', 13, spy],
-  ['friends', 19, friends],
-  ['comeback', 18, comeback],
-  ['together', 13, together],
-  ['ambush', 19, ambush],
-  ['finale', 11, finale],
-  ['credits', 7, credits],
+  ['opening', 15, opening],
+  ['intro', 17, intro],
+  ['race', 21, race],
+  ['falling', 21, falling],
+  ['overtaken', 22, overtaken],
+  ['rain', 16, rain],
+  ['friend', 19, friend],
+  ['build', 11, build],
+  ['argon', 19, argon],
+  ['together', 14, together],
+  ['stand', 14, stand],
+  ['ambush', 17, ambush],
+  ['finale', 14, finale],
+  ['credits', 11, credits],
+  ['carbon', 9, carbon],
 ];
 
-export const SCENES = ORDER.map(([id, dur, mod]) => {
-  const m = mod || placeholder(id);
-  return { ...m.default, id, dur, sfx: m.SFX || [] };
-});
+export const SCENES = ORDER.map(([id, dur, m]) => ({ ...m.default, id, dur, sfx: m.SFX || [], music: m.MUSIC || [] }));

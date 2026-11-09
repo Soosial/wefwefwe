@@ -104,6 +104,34 @@ export function drawEye(g, ex, ey, w, h, style, side, body = 'o') {
       fillRect(g, ex, ey, w, h, k);
       fillRect(g, ex + (big ? 1 : 0), ey, 2, 2, wh);
       break;
+    case 'heart': { // love-struck
+      const rows = big ? ['.##.##', '######', '######', '.####.', '..##..'] : ['#.#.', '####', '.##.'];
+      rows.forEach((r, j) => [...r].forEach((c, i) => { if (c === '#') set(g, ex + i, ey + 1 + j, j === 0 && i === 1 ? 'w' : 'q'); }));
+      break;
+    }
+    case 'spiral': { // dizzy
+      if (big) { fillRect(g, ex, ey + 1, w, 1, k); fillRect(g, ex + w - 1, ey + 1, 1, 5, k); fillRect(g, ex, ey + 5, w, 1, k); fillRect(g, ex, ey + 3, 1, 3, k); fillRect(g, ex + 2, ey + 3, 2, 1, k); }
+      else { fillRect(g, ex, ey + 1, w, 1, k); fillRect(g, ex + w - 1, ey + 1, 1, 4, k); fillRect(g, ex, ey + 4, w, 1, k); set(g, ex, ey + 3, k); set(g, ex + 1, ey + 3, k); }
+      break;
+    }
+    case 'sus': { // suspicious side-glance under a heavy flat lid
+      const top = ey + Math.floor(h / 2);
+      fillRect(g, ex, top, w, h - Math.floor(h / 2), k);
+      fillRect(g, ex - (side === 0 ? 1 : 0), top - 1, w + 1, 1, k);
+      set(g, side === 0 ? ex + w - 2 : ex + 1, top + 1, wh);
+      break;
+    }
+    case 'determined':
+      fillRect(g, ex, ey + (big ? 2 : 1), w, h - (big ? 2 : 1), k);
+      fillRect(g, ex + (big ? 1 : 0), ey + (big ? 3 : 2), 2, 1, wh);
+      break;
+    case 'sparkle':
+      fillRect(g, ex, ey, w, h, k);
+      fillRect(g, ex + (big ? 1 : 0), ey + (big ? 1 : 0), 2, 2, wh);
+      set(g, ex + w - (big ? 2 : 1), ey + h - (big ? 3 : 2), wh);
+      set(g, ex + (big ? 1 : 0), ey + h - 2, wh);
+      if (big) { set(g, ex + 3, ey + 3, wh); }
+      break;
     case 'open':
     default:
       fillRect(g, ex, ey, w, h, k);
@@ -116,6 +144,38 @@ export function drawTears(g, ex, ey, w, h, amt) {
   const n = Math.round(amt * 6);
   for (let i = 0; i < n; i++) set(g, ex + 1, ey + h + i, i % 2 ? 'T' : 't');
 }
+
+// Eyebrows (only for strong emotions). side 0 = left eye (inner end on the right). ch = brow colour key.
+export function drawBrow(g, ex, ey, w, side, style, ch = 'O') {
+  if (!style) return;
+  const big = w >= 6, n = w + 1, span = big ? 2.4 : 1.6;
+  for (let i = 0; i < n; i++) {
+    const x = side === 0 ? ex - 1 + i : ex + w - i; // i = 0 at the outer end
+    let dy;
+    if (style === 'angry') dy = -3 - (big ? 1 : 0) + Math.floor((i * span) / (n - 1) + 0.5);
+    else if (style === 'worried' || style === 'sad') dy = -1 - (big ? 1 : 0) - Math.floor((i * span) / (n - 1) + 0.5);
+    else if (style === 'raised') dy = -4 - (big ? 1 : 0) + (i === 0 || i === n - 1 ? 1 : 0);
+    else dy = -2 - (big ? 1 : 0);
+    set(g, x, ey + dy, ch);
+    if (big) set(g, x, ey + dy - 1, ch);
+  }
+}
+
+// 3-frame blink: returns 'half' | 'blink' | null
+export function blinkState(t, seed = 0, period = 3.4) {
+  const ph = (t + hashf(seed) * period) % period;
+  if (ph < 0.05) return 'half';
+  if (ph < 0.13) return 'blink';
+  if (ph < 0.18) return 'half';
+  return null;
+}
+// mouth flaps while a line is being spoken
+export function talkMouth(t, t0, t1, base = 'smile', seed = 0) {
+  if (t < t0 || t > t1) return base;
+  const h = hashf(Math.floor((t - t0) * 9) * 13 + seed * 7);
+  return h < 0.45 ? 'open' : h < 0.72 ? 'o' : base;
+}
+const hashf = (n) => { n = Math.imul((n | 0) ^ 0x9e3779b9, 0x85ebca6b); n ^= n >>> 13; n = Math.imul(n, 0xc2b2ae35); n ^= n >>> 16; return (n >>> 0) / 4294967296; };
 
 // mouth anchored with (cx = center column between the two mouth corners, my = top row)
 export function drawMouth(g, cx, my, style, big = true) {
@@ -133,6 +193,11 @@ export function drawMouth(g, cx, my, style, big = true) {
     case 'cat': set(g, cx - 3, my, m); set(g, cx - 2, my + 1, m); set(g, cx - 1, my, m); set(g, cx, my, m); set(g, cx + 1, my + 1, m); set(g, cx + 2, my, m); break;
     case 'smirk': set(g, cx + 2, my, m); fillRect(g, cx - 2, my + 1, 4, 1, m); break;
     case 'teeth': fillRect(g, cx - 3, my, 6, 3, m); fillRect(g, cx - 2, my + 1, 4, 1, 'w'); break;
+    case 'tongue': set(g, cx - 3, my, m); set(g, cx + 2, my, m); fillRect(g, cx - 2, my + 1, 4, 1, m); fillRect(g, cx - 1, my + 2, 2, 1, 'q'); break;
+    case 'gasp': fillRect(g, cx - 2, my - 1, 4, 4, m); fillRect(g, cx - 1, my, 2, 2, 'q'); break;
+    case 'sob': fillRect(g, cx - 2, my, 4, 1, m); fillRect(g, cx - 3, my + 1, 6, 2, m); fillRect(g, cx - 2, my + 2, 4, 1, 'q'); break;
+    case 'pout': set(g, cx - 2, my + 1, m); fillRect(g, cx - 1, my, 2, 1, m); set(g, cx + 1, my + 1, m); break;
+    case 'smallSmile': set(g, cx - 2, my, m); set(g, cx + 1, my, m); fillRect(g, cx - 1, my + 1, 2, 1, m); break;
     case 'smile':
     default:
       if (big) { set(g, cx - 3, my, m); set(g, cx + 2, my, m); fillRect(g, cx - 2, my + 1, 4, 1, m); }
@@ -173,22 +238,27 @@ export function palette(base, o = {}) {
 
 const q = (v, step = 0.05) => Math.round((v ?? 0) / step) * step;
 // grid params: arrays and most scalars must be integer pixel offsets; shape params stay fractional (quantized)
-const FLOAT = new Set(['sharp', 'R', 'sx', 'sy', 'rot', 'cy', 'tears', 'orange', 'tail', 'fin', 'core']);
+const FLOAT = new Set(['sharp', 'R', 'sx', 'sy', 'rot', 'cy', 'tears', 'orange', 'tail', 'fin', 'core', 'spout']);
 function norm(k, v) {
   if (typeof v === 'number') return FLOAT.has(k) ? Math.round(v * 100) / 100 : Math.round(v);
   if (Array.isArray(v)) return v.map((x) => (typeof x === 'number' ? Math.round(x) : x));
   return v;
 }
 
-// makeChar: gridFn(pose) -> { g, ax, ay }, palFn(pose) -> palette
-export function makeChar(ns, gridFn, palFn, gridKeys, palKeys, emissive = null) {
+// makeChar: gridFn(pose) -> { g, ax, ay }, palFn(pose) -> palette. flatMap collapses shading keys (for voxel sides).
+export function makeChar(ns, gridFn, palFn, gridKeys0, palKeys0, emissive = null, flatMap = null) {
+  const gridKeys = [...gridKeys0, 'noOutline'], palKeys = [...palKeys0, 'flat'];
   return function drawChar(s, x, y, p0 = {}) {
     const p = { ...p0 };
     for (const k of gridKeys) if (p[k] !== undefined && p[k] !== null) p[k] = norm(k, p[k]);
     const gk = gridKeys.map((k) => JSON.stringify(p[k] ?? null)).join('|');
     const pk = palKeys.map((k) => (typeof p[k] === 'number' ? q(p[k]) : JSON.stringify(p[k] ?? null))).join('|');
     const built = cached(ns + ':g', gk, () => gridFn(p));
-    const spr = cached(ns + ':s', gk + '#' + pk, () => toSprite(built.g, palFn(p), built.ax, built.ay, emissive));
+    const spr = cached(ns + ':s', gk + '#' + pk, () => {
+      const pal = palFn(p);
+      if (p.flat && flatMap) for (const k in flatMap) pal[k] = pal[flatMap[k]];
+      return toSprite(built.g, pal, built.ax, built.ay, emissive);
+    });
     if (p.shadow !== false && p.shadowY !== undefined) groundShadow(s, x, p.shadowY, p.shadowW ?? spr.w * 0.55, p.shadowA ?? 0.45);
     blit(s, spr, x, y, { flip: p.flip, alpha: p.alpha, flash: p.flash, tint: p.tintBlit, dark: p.dark, sil: p.sil, scale: p.scale, clipY: p.clipY });
     return spr;

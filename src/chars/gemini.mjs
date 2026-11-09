@@ -1,7 +1,7 @@
 // Gemini — four-colour sparkle star. Shape is re-rasterized from its superellipse formula every pose,
 // so it can spin, stretch, sharpen (confidence) or round off and desaturate (sadness) while staying pixel-crisp.
 import { createGrid, fillRect, set, shade, outline, stampHand } from '../core/sprite.mjs';
-import { drawEye, drawMouth, drawTears, palette, makeChar } from './common.mjs';
+import { drawEye, drawBrow, drawMouth, drawTears, palette, makeChar } from './common.mjs';
 
 export const GEM_PAL = {
   O: '#1a1f4d',
@@ -60,21 +60,22 @@ function grid(p) {
     for (let side = 0; side < 2; side++) {
       const ex = (side ? 32 : 20) + OFF + look, ey = 23 + OFF + faceY + lookY;
       drawEye(g, ex, ey, 4, 6, side ? (p.eyeR || eyes) : (p.eyeL || eyes), side, 'bo');
+      drawBrow(g, ex, ey, 4, side, p.brow, 'k');
       if (p.tears) drawTears(g, ex + (side ? 2 : 1), ey, 2, 6, p.tears);
     }
     const blush = p.blush ?? 1;
     if (blush) { fillRect(g, 17 + OFF, 30 + OFF + faceY, 3, 2, 'p'); fillRect(g, 36 + OFF, 30 + OFF + faceY, 3, 2, 'p'); if (blush > 1) { set(g, 16 + OFF, 31 + OFF + faceY, 'p'); set(g, 39 + OFF, 31 + OFF + faceY, 'p'); } }
     drawMouth(g, 28 + OFF, 30 + OFF + faceY, p.mouth || 'smile', false);
   }
-  outline(g);
+  if (!p.noOutline) outline(g);
   return { g, ax: C, ay: Math.round(C + 28 * (p.sy ?? 1)) };
 }
 // stampHand probing (auto placement) must not modify the real grid
 function createProbe(g) { return g.map((r) => [...r]); }
 
 const base = makeChar('gemini', grid, (p) => palette(GEM_PAL, { sat: p.sat, bright: p.bright, tint: p.tint }),
-  ['sharp', 'R', 'sx', 'sy', 'rot', 'cy', 'bob', 'core', 'hands', 'handL', 'handR', 'face', 'eyes', 'eyeL', 'eyeR', 'look', 'lookY', 'mouth', 'blush', 'tears'],
-  ['sat', 'bright', 'tint'], ['ao', 'ah', 'as']);
+  ['sharp', 'R', 'sx', 'sy', 'rot', 'cy', 'bob', 'core', 'hands', 'handL', 'handR', 'face', 'brow', 'eyes', 'eyeL', 'eyeR', 'look', 'lookY', 'mouth', 'blush', 'tears'],
+  ['sat', 'bright', 'tint'], ['ao', 'ah', 'as'], { rh: 'ro', rs: 'ro', yh: 'yo', ys: 'yo', gh: 'go', gs: 'go', bh: 'bo', bs: 'bo', ah: 'ao', as: 'ao' });
 
 // x,y = point on the ground under Gemini (it floats; hover is drawn above y)
 export function drawGemini(s, x, y, p = {}) {

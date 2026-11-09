@@ -1,76 +1,83 @@
-// Rival models (DeepSeek whale, Kimi, Z/GLM) and the crowd of tiny "users". Same pipeline/style as heroes.
+// Rival models (DeepSeek whale, Kimi) and the crowd of tiny "users". Same pipeline/style as heroes.
 import { createGrid, fillRect, set, shade, outline, stampHand } from '../core/sprite.mjs';
-import { drawEye, drawMouth, palette, makeChar } from './common.mjs';
+import { drawEye, drawBrow, drawTears, drawMouth, palette, makeChar } from './common.mjs';
 import { hash } from '../core/math.mjs';
 import { hsl } from '../core/fb.mjs';
 
 // ---------------- DeepSeek whale ----------------
 export const WHALE_PAL = {
-  O: '#101a5c', o: '#4d6bfe', h: '#8aa0ff', s: '#3550d8', S: '#2a3fb0', b: '#c9d4ff', c: '#9fb0f2',
-  k: '#0e1238', w: '#ffffff', p: '#ff9fc0', m: '#101a5c', q: '#e8606a', d: '#2a1030',
+  O: '#0f1a5c', o: '#4d6bfe', h: '#86a0ff', s: '#3550d8', S: '#2a3fb0', b: '#e4eaff', c: '#b4c2f4',
+  k: '#0e1238', w: '#ffffff', p: '#ff9fc0', m: '#0f1a5c', q: '#e8606a', d: '#2a1038', j: '#8fd8ff', J: '#e6f8ff', t: '#9fd8ff', T: '#e6f6ff',
 };
-const WW = 92, WH = 52;
+const WW = 96, WH = 62, WOY = 14;
+// cute DeepSeek whale facing left: big round head, pale pleated belly, curled tail with two flukes, water spout
 function whaleGrid(p) {
   const g = createGrid(WW, WH);
-  const tail = p.tail ?? 0; // -1..1 fluke bend
-  const cx = 56, cy = 26, rx = 28, ry = 15;
-  for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
-    const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
-    // slightly flatter belly, rounder head
-    const P = dx > 0 ? 2.2 : 2.0;
-    if (Math.abs(dx) ** P + Math.abs(dy) ** 2.1 <= 1) set(g, x, y, 'o');
+  const tail = p.tail ?? 0, Y = (y) => y + WOY;
+  const x0 = 5, x1 = 66, cy = 28;
+  for (let x = x0; x <= x1; x++) {
+    const u = (x - x0) / (x1 - x0);
+    const up = 17 * Math.sqrt(Math.min(1, u * 2.6)) * (1 - 0.62 * Math.pow(Math.max(0, (u - 0.32) / 0.68), 1.5));
+    const dn = 13 * Math.sqrt(Math.min(1, u * 3.4)) * (1 - 0.72 * Math.pow(Math.max(0, (u - 0.42) / 0.58), 1.3));
+    for (let y = Math.round(cy - up); y <= Math.round(cy + dn); y++) set(g, x, Y(y), 'o');
   }
-  // tail stalk tapering from body to flukes, bending with `tail`
-  for (let x = 12; x <= 34; x++) {
-    const u = (34 - x) / 22; // 0 at body, 1 at flukes
-    const half = 8 - u * 5.5;
-    const yc = cy - 2 + Math.round(tail * 5 * u * u) - u * 3;
-    for (let y = Math.round(yc - half); y <= Math.round(yc + half); y++) set(g, x, y, 'o');
+  for (let i = 0; i <= 40; i++) {
+    const u = i / 40, x = 62 + u * 14, y = cy - 4 - u * u * 13 + tail * 2 * u, th = 8 - u * 4.5;
+    for (let dy = -th / 2; dy <= th / 2; dy += 0.5) set(g, Math.round(x), Y(Math.round(y + dy)), 'o');
   }
-  // flukes
-  const fy = cy - 5 + Math.round(tail * 6);
-  for (let i = 0; i < 11; i++) {
-    const x = 13 - i;
-    const spread = 2 + i * 0.9;
-    for (let y = Math.round(fy - spread - 3 - tail * i * 0.5); y <= Math.round(fy - spread + 1 - tail * i * 0.3); y++) set(g, x, y, 'o');
-    for (let y = Math.round(fy + spread - 1 - tail * i * 0.3); y <= Math.round(fy + spread + 3 - tail * i * 0.5); y++) set(g, x, y, 'o');
-  }
-  // flipper
+  const lobe = (ax, ay, bx, by, wd) => {
+    const nx = -(by - ay), ny = bx - ax, nl = Math.hypot(nx, ny);
+    for (let i = 0; i <= 24; i++) {
+      const u = i / 24, x = ax + (bx - ax) * u, y = ay + (by - ay) * u, hw = wd * Math.sin(Math.PI * Math.min(1, u * 1.15));
+      for (let k = -hw; k <= hw; k += 0.5) set(g, Math.round(x + (nx / nl) * k), Y(Math.round(y + (ny / nl) * k)), 'o');
+    }
+  };
+  const fx = 76, fy = cy - 17 + Math.round(tail * 2);
+  lobe(fx, fy, fx + 5, fy - 11 - Math.round(tail), 3.2);
+  lobe(fx, fy, fx + 12, fy - 2 + Math.round(tail), 3.2);
   const fl = p.fin ?? 0;
-  for (let i = 0; i < 8; i++) for (let j = 0; j < 4 - (i >> 2); j++) set(g, 50 - i + Math.round(fl * i * 0.3), 38 + i + j - Math.round(fl * i * 0.6), 'o');
+  lobe(32, cy + 9, 41 + Math.round(fl * 2), cy + 16 - Math.round(fl * 5), 2.6);
   shade(g);
-  // belly + pleats
-  for (let y = 0; y < WH; y++) for (let x = 30; x < WW; x++) {
-    const t = g[y][x];
-    if (t !== 'o' && t !== 'h' && t !== 's') continue;
-    const line = cy + 5 - (x - 30) * 0.08;
-    if (y >= line) g[y][x] = t === 's' ? 'c' : ((y - Math.round(line)) % 3 === 2 && x > 38 && x < 78 ? 'c' : 'b');
+  for (let x = x0; x <= 52; x++) for (let y = 0; y < WH; y++) {
+    const ch = g[y][x];
+    if (ch !== 'o' && ch !== 'h' && ch !== 's') continue;
+    const yy = y - WOY, line = cy + 4 + Math.max(0, (14 - x) * 0.35) - Math.max(0, x - 38) * 0.25;
+    if (yy < line) continue;
+    g[y][x] = Math.round(yy - line) % 3 === 2 && x > 12 && x < 46 ? 'c' : ch === 's' ? 'c' : 'b';
   }
-  // eye, blush, mouth
-  const eyes = p.eyes || 'open';
-  drawEye(g, 66, 17 + (p.look ? 0 : 0), 4, 6, eyes, 0, 'o');
-  if (p.eye2) drawEye(g, 74, 17, 3, 5, eyes, 1, 'o');
-  fillRect(g, 70, 26, 4, 2, 'p');
+  const eyes = p.eyes || 'open', lk = p.look | 0;
+  drawEye(g, 17 + lk, Y(19), 4, 6, eyes, 0, 'o');
+  drawBrow(g, 17 + lk, Y(19), 4, 0, p.brow, 'k');
+  if (p.tears) drawTears(g, 18, Y(19), 4, 6, p.tears);
+  fillRect(g, 21, Y(27), 3, 2, 'p');
   const mouth = p.mouth || 'smile';
   if (mouth === 'laugh' || mouth === 'open') {
-    for (let x = 60; x <= 83; x++) {
-      const top = 29 - Math.round((x - 60) * 0.12);
-      const depth = mouth === 'laugh' ? Math.round(Math.sin(((x - 60) / 23) * Math.PI) * 5) : Math.round(Math.sin(((x - 60) / 23) * Math.PI) * 3);
-      for (let y = top; y <= top + depth; y++) set(g, x, y, y >= top + depth - 1 && x > 66 && x < 80 ? 'q' : 'd');
+    const depth = mouth === 'laugh' ? 5 : 3;
+    for (let x = 6; x <= 19; x++) {
+      const a = Math.sin(((x - 6) / 13) * Math.PI);
+      for (let y = 0; y <= Math.round(a * depth); y++) set(g, x, Y(30 + y), y >= Math.round(a * depth) - 1 && x > 9 && x < 17 ? 'q' : 'd');
     }
-  } else {
-    for (let x = 60; x <= 82; x++) set(g, x, 29 - Math.round((x - 60) * 0.12) + (x < 63 ? 1 : 0), 'm');
+  } else if (mouth === 'flat') fillRect(g, 6, Y(31), 12, 1, 'm');
+  else if (mouth === 'o') fillRect(g, 8, Y(30), 3, 3, 'd');
+  else for (let x = 6; x <= 18; x++) set(g, x, Y(31 - (x > 15 ? x - 15 : 0)), 'm');
+  fillRect(g, 25, Y(cy - 16), 2, 1, 'S');
+  const sp = p.spout ?? 0;
+  if (sp > 0) {
+    const hgt = Math.round(10 * sp), ph = p.spoutPh ?? 0;
+    for (let k = 0; k < hgt; k++) { set(g, 25, Y(cy - 17 - k), 'j'); set(g, 26, Y(cy - 17 - k), k % 2 ? 'J' : 'j'); }
+    for (let i = 0; i < 7; i++) {
+      const a = -Math.PI / 2 + (i - 3) * 0.38, r = 3 + ((i + ph) % 3);
+      set(g, Math.round(25.5 + Math.cos(a) * r * 1.4), Y(cy - 17 - hgt + Math.round(Math.sin(a) * r * 0.6) + 1), i % 2 ? 'J' : 'j');
+    }
   }
-  // blowhole
-  fillRect(g, 61, 11, 3, 1, 'S');
-  outline(g);
-  return { g, ax: 56, ay: 46 };
+  if (!p.noOutline) outline(g);
+  return { g, ax: 36, ay: Y(cy + 14) };
 }
-const whaleBase = makeChar('whale', whaleGrid, (p) => palette(WHALE_PAL, { sat: p.sat, bright: p.bright }), ['tail', 'fin', 'eyes', 'eye2', 'mouth'], ['sat', 'bright']);
-export const drawWhale = (s, x, y, p = {}) => whaleBase(s, Math.round(x), Math.round(y), { ...p, tail: Math.round((p.tail ?? 0) * 4) / 4, fin: Math.round((p.fin ?? 0) * 3) / 3 });
+const whaleBase = makeChar('whale', whaleGrid, (p) => palette(WHALE_PAL, { sat: p.sat, bright: p.bright }), ['tail', 'fin', 'eyes', 'brow', 'look', 'mouth', 'tears', 'spout', 'spoutPh'], ['sat', 'bright'], null, { h: 'o', s: 'o', S: 'o', c: 'b' });
+export const drawWhale = (s, x, y, p = {}) => whaleBase(s, Math.round(x), Math.round(y), { ...p, tail: Math.round((p.tail ?? 0) * 4) / 4, fin: Math.round((p.fin ?? 0) * 3) / 3, spout: Math.round((p.spout ?? 0) * 5) / 5, spoutPh: Math.floor(p.spoutPh ?? 0) % 3 });
 
 // ---------------- Kimi (Moonshot) ----------------
-export const KIMI_PAL = { O: '#07080d', o: '#353b51', h: '#565f80', s: '#242939', W: '#f4f6ff', L: '#c9cfe6', B: '#2f8dff', b: '#9cc8ff', k: '#07080d', w: '#ffffff', p: '#ff9fc0', m: '#07080d', q: '#e8606a' };
+export const KIMI_PAL = { O: '#07080d', o: '#4a5270', h: '#6c76a0', s: '#363c56', W: '#f4f6ff', L: '#c9cfe6', B: '#2f8dff', b: '#9cc8ff', k: '#07080d', w: '#ffffff', p: '#ff9fc0', m: '#07080d', q: '#e8606a' };
 function kimiGrid(p) {
   const g = createGrid(56, 56);
   const sq = p.sq ?? 0;
@@ -93,47 +100,17 @@ function kimiGrid(p) {
   stampHand(g, cx + rx - 3 + hR[0], cy + 3 + hR[1], 6, 1, hand, 'O', true);
   const eyes = p.eyes || 'open';
   drawEye(g, cx - 7, cy + 1, 4, 6, eyes, 0, 'o');
+  drawBrow(g, cx - 7, cy + 1, 4, 0, p.brow, 'W');
+  drawBrow(g, cx + 3, cy + 1, 4, 1, p.brow, 'W');
   drawEye(g, cx + 3, cy + 1, 4, 6, eyes, 1, 'o');
   fillRect(g, cx - 10, cy + 8, 2, 1, 'p'); fillRect(g, cx + 8, cy + 8, 2, 1, 'p');
   drawMouth(g, cx, cy + 8, p.mouth || 'smile', false);
-  outline(g);
+  if (!p.noOutline) outline(g);
   return { g, ax: cx, ay: cy + ry + 1 };
 }
-const kimiBase = makeChar('kimi', kimiGrid, (p) => palette(KIMI_PAL, { sat: p.sat, bright: p.bright }), ['sq', 'handL', 'handR', 'eyes', 'mouth'], ['sat', 'bright'], ['B', 'b']);
+const kimiBase = makeChar('kimi', kimiGrid, (p) => palette(KIMI_PAL, { sat: p.sat, bright: p.bright }), ['sq', 'handL', 'handR', 'eyes', 'brow', 'mouth'], ['sat', 'bright'], ['B', 'b'], { h: 'o', s: 'o', L: 'W' });
 export const drawKimi = (s, x, y, p = {}) => kimiBase(s, Math.round(x), Math.round(y), p);
 
-// ---------------- Z (GLM / Zhipu) ----------------
-export const Z_PAL = { O: '#121633', o: '#e3e8f6', h: '#ffffff', s: '#b4bdd8', Z: '#2346d6', z: '#5d7bff', k: '#121633', w: '#ffffff', p: '#ff9fc0', m: '#121633', q: '#e8606a' };
-function zGrid(p) {
-  const g = createGrid(52, 52);
-  const sq = p.sq ?? 0;
-  const cx = 26, cy = 28 + sq, rx = 16 + sq, ry = 16 - sq;
-  for (let y = 0; y < 52; y++) for (let x = 0; x < 52; x++) {
-    const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
-    if (Math.abs(dx) ** 3.2 + Math.abs(dy) ** 3.2 <= 1) set(g, x, y, 'o');
-  }
-  // little antenna-zigzag on top
-  set(g, cx + 1, cy - ry - 1, 'o'); set(g, cx + 2, cy - ry - 2, 'o'); set(g, cx + 1, cy - ry - 3, 'o'); set(g, cx + 2, cy - ry - 4, 'o');
-  shade(g);
-  const zx = cx - 7, zy = cy - 12;
-  fillRect(g, zx, zy, 14, 2, 'Z');
-  for (let i = 0; i < 6; i++) fillRect(g, zx + 11 - i * 2, zy + 2 + i, 3, 1, 'Z');
-  fillRect(g, zx, zy + 8, 14, 2, 'Z');
-  fillRect(g, zx, zy, 14, 1, 'z');
-  const hand = { o: 'o', h: 'h', s: 's' };
-  const hL = p.handL || [0, 0], hR = p.handR || [0, 0];
-  stampHand(g, cx - rx - 3 + hL[0], cy + 4 + hL[1], 6, -1, hand, 'O', true);
-  stampHand(g, cx + rx - 3 + hR[0], cy + 4 + hR[1], 6, 1, hand, 'O', true);
-  const eyes = p.eyes || 'open';
-  drawEye(g, cx - 7, cy + 1, 4, 6, eyes, 0, 'o');
-  drawEye(g, cx + 3, cy + 1, 4, 6, eyes, 1, 'o');
-  fillRect(g, cx - 10, cy + 8, 2, 1, 'p'); fillRect(g, cx + 8, cy + 8, 2, 1, 'p');
-  drawMouth(g, cx, cy + 8, p.mouth || 'smile', false);
-  outline(g);
-  return { g, ax: cx, ay: cy + ry + 1 };
-}
-const zBase = makeChar('z', zGrid, (p) => palette(Z_PAL, { sat: p.sat, bright: p.bright }), ['sq', 'handL', 'handR', 'eyes', 'mouth'], ['sat', 'bright']);
-export const drawZ = (s, x, y, p = {}) => zBase(s, Math.round(x), Math.round(y), p);
 
 // ---------------- crowd "users" ----------------
 function userGrid(p) {
@@ -156,7 +133,7 @@ function userGrid(p) {
   else { fillRect(g, Math.floor(cx - 3) + lk, ey, 1, 2, 'k'); fillRect(g, Math.floor(cx + 2) + lk, ey, 1, 2, 'k'); }
   if (p.mouth === 'o') set(g, Math.floor(cx) + lk, ey + 3, 'k');
   set(g, Math.floor(cx - 4) + lk, ey + 2, 'p'); set(g, Math.floor(cx + 3) + lk, ey + 2, 'p');
-  outline(g);
+  if (!p.noOutline) outline(g);
   return { g, ax: Math.floor(cx), ay: Math.floor(cy + h / 2) + 1 };
 }
 const userPal = (p) => {

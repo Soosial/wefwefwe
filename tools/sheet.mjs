@@ -6,7 +6,7 @@ import { drawClawd, clawdWalk } from '../src/chars/clawd.mjs';
 import { drawCodex, codexWalk } from '../src/chars/codex.mjs';
 import { drawGemini } from '../src/chars/gemini.mjs';
 import { drawQwen } from '../src/chars/qwen.mjs';
-import { drawWhale, drawKimi, drawZ, drawUser } from '../src/chars/rivals.mjs';
+import { drawWhale, drawKimi, drawUser } from '../src/chars/rivals.mjs';
 
 const s = new Surface(960, 600);
 gradV(s, 0, 0, 960, 600, [[0, '#1b1b2a'], [1, '#2a2440']]);
@@ -43,13 +43,11 @@ const qw = [
 ];
 qw.forEach((p, i) => drawQwen(s, 42 + i * 86, 372, p));
 
-row(470, 'rivals: whale / laugh / kimi / z / users');
+row(470, 'rivals: whale / laugh / kimi / users');
 drawWhale(s, 70, 470, {});
 drawWhale(s, 190, 470, { mouth: 'laugh', eyes: 'laugh', tail: 1 });
 drawKimi(s, 290, 470, {});
 drawKimi(s, 350, 470, { eyes: 'laugh', mouth: 'big' });
-drawZ(s, 410, 470, {});
-drawZ(s, 470, 470, { eyes: 'laugh', mouth: 'open' });
 for (let i = 0; i < 14; i++) drawUser(s, 520 + i * 20, 470, { seed: i, eyes: i % 3 === 0 ? 'happy' : 'open' });
 savePNG(new URL('../out/sheet.png', import.meta.url).pathname, s.w, s.h, s.d);
 console.log('ok');

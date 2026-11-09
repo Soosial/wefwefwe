@@ -1,6 +1,6 @@
 // Clawd — orange 4-legged crab-blob (Claude). Parametric port of the reference sprite.
 import { createGrid, fillRect, set, shade, outline } from '../core/sprite.mjs';
-import { drawEye, drawMouth, drawTears, palette, makeChar } from './common.mjs';
+import { drawEye, drawBrow, drawMouth, drawTears, palette, makeChar } from './common.mjs';
 
 export const CLAWD_PAL = {
   O: '#5e2716', o: '#d97757', h: '#f0a07c', s: '#b0573a', S: '#8f4127', k: '#1a1113', w: '#fff6ee',
@@ -41,6 +41,7 @@ function grid(p) {
     const ecx = cx + (side ? 11 : -11) * k;
     const ex = Math.round(ecx - 3) + look, ey = by + 5 + lookY;
     drawEye(g, ex, ey, 6, 8, side === 0 ? (p.eyeL || eyes) : (p.eyeR || eyes), side);
+    drawBrow(g, ex, ey, 6, side, p.brow, 'O');
     if (p.tears) drawTears(g, ex + (side ? 3 : 1), ey, 2, 8, p.tears);
   }
   const blush = p.blush ?? 1;
@@ -53,13 +54,13 @@ function grid(p) {
     }
   }
   drawMouth(g, cx, by + 14 + (p.mouthY | 0), p.mouth || 'smile', true);
-  outline(g);
+  if (!p.noOutline) outline(g);
   return { g, ax: OX + 28, ay: OY + 39 };
 }
 
 const base = makeChar('clawd', grid, (p) => palette(CLAWD_PAL, { sat: p.sat, bright: p.bright, tint: p.tint }),
-  ['sq', 'bob', 'legs', 'legDx', 'armL', 'armR', 'armLx', 'armRx', 'eyes', 'eyeL', 'eyeR', 'look', 'lookY', 'mouth', 'mouthY', 'blush', 'tears'],
-  ['sat', 'bright', 'tint']);
+  ['sq', 'bob', 'legs', 'legDx', 'armL', 'armR', 'armLx', 'armRx', 'brow', 'eyes', 'eyeL', 'eyeR', 'look', 'lookY', 'mouth', 'mouthY', 'blush', 'tears'],
+  ['sat', 'bright', 'tint'], null, { h: 'o', s: 'o', S: 'o' });
 
 // walk cycle helper: phase in cycles (1 cycle = 4 frames)
 export function clawdWalk(ph) {
