@@ -1,6 +1,7 @@
 // Minimal PNG encoder for previews / contact sheets (RGBA Uint32 little-endian buffers).
 import { deflateSync } from 'node:zlib';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 const CRC = new Uint32Array(256).map((_, n) => {
   let c = n;
@@ -44,5 +45,6 @@ export function encodePNG(w, h, px32) {
   ]);
 }
 export function savePNG(path, w, h, px32) {
+  mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, encodePNG(w, h, px32));
 }

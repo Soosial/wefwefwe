@@ -1,5 +1,6 @@
 // Mixdown: builds out/audio.wav (stereo 16-bit, 44.1 kHz) from every scene's MUSIC cues and SFX.
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { SR, Bus, INST, reverb } from '../src/audio/synth.mjs';
 import { SFX } from '../src/audio/sfx.mjs';
 import { SCENES } from '../src/timeline.mjs';
@@ -138,6 +139,7 @@ if (process.argv[1] && process.argv[1].endsWith('audio.mjs')) {
   const t0 = Date.now();
   const { buf, peak, count, n } = buildAudio();
   const out = process.argv[2] || 'out/audio.wav';
+  mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, buf);
   console.log('wrote', out, 'samples', n, 'sfx', count, 'cues', SCENES.reduce((a, s) => a + s.music.length, 0), 'peak(pre-norm)', peak.toFixed(3), 'ms', Date.now() - t0);
 }

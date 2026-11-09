@@ -1,6 +1,7 @@
 // Full pipeline: audio + N parallel video segments -> concat -> mux. Usage: node tools/render_all.mjs [segments=4] [out=out/cartoon.mp4]
 import { spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { SCENES } from '../src/timeline.mjs';
 import { buildAudio } from './audio.mjs';
 
@@ -11,6 +12,9 @@ const run = (cmd, args) => new Promise((res, rej) => {
   const p = spawn(cmd, args, { stdio: 'inherit' });
   p.on('close', (c) => (c === 0 ? res() : rej(new Error(cmd + ' exit ' + c))));
 });
+// out/ is git-ignored, so a fresh checkout has to create it
+mkdirSync('out', { recursive: true });
+mkdirSync(dirname(OUT), { recursive: true });
 const t0 = Date.now();
 const { buf } = buildAudio();
 writeFileSync('out/audio.wav', buf);

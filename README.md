@@ -6,12 +6,14 @@
 
 ## Сборка
 
+Нужны Node.js (проверено на v24) и ffmpeg; npm-зависимостей нет. Всё, что собирается, пишется в `out/`.
+
 ```bash
-pip3 install pillow fonttools && python3 tools/build_font.py   # один раз: атлас пиксельных шрифтов (assets/fonts.json уже в репо)
-node tools/render_all.mjs 4 out/cartoon.mp4                     # звук + 4 параллельных сегмента → MP4 (нужен ffmpeg)
+node tools/render_all.mjs 4 out/cartoon.mp4                     # звук + 4 параллельных сегмента → MP4 (~4–5 мин на 4 ядрах)
 node tools/preview.mjs --scene argon --n 12 --cols 4            # контактный лист кадров сцены → out/preview.png
 node tools/preview.mjs --times 150.2,209 --full                 # отдельные кадры 1920×1080
 node tools/audio.mjs out/audio.wav                              # только звук (AUDIO_REPORT=1 — уровни по сценам)
+pip3 install pillow fonttools && python3 tools/build_font.py   # необязательно: пересобрать атлас шрифтов assets/fonts.json
 ```
 
 ## Структура
